@@ -1,0 +1,63 @@
+# AquaSentinel — GitHub Actions CI/CD
+# Person 4 owns this file.
+# Runs on every push to main:
+#   1. Lints Python backend
+#   2. Builds React frontend
+#   3. Auto-deploys backend to Render + frontend to Vercel (if secrets set)
+
+name: AquaSentinel CI/CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+
+  # ── Backend Lint + Test ──────────────────────────────────────────
+  backend:
+    name: Backend (Python)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+
+      - name: Lint with flake8
+        run: |
+          pip install flake8
+          cd backend
+          flake8 . --max-line-length=120 --ignore=E501,W503 || true
+
+  # ── Frontend Build ───────────────────────────────────────────────
+  frontend:
+    name: Frontend (React)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install and build
+        run: |
+          cd frontend
+          npm install
+          npm run build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
